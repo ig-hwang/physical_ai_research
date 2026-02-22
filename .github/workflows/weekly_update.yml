@@ -1,0 +1,63 @@
+name: PASIS Weekly Pipeline
+
+on:
+  # 매주 월요일 00:00 UTC = 09:00 KST
+  schedule:
+    - cron: "0 0 * * 1"
+  # 수동 트리거
+  workflow_dispatch:
+    inputs:
+      days_back:
+        description: "수집 기간 (일)"
+        required: false
+        default: "14"
+
+jobs:
+  weekly-pipeline:
+    name: Physical AI Data Collection & Analysis
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Install Dependencies
+        run: pip install -r requirements.txt
+
+      - name: Initialize Database
+        run: python run_pipeline.py --init
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          DATABASE_URL: sqlite:///./pasis.db
+
+      - name: Run Pipeline (Collect → Analyze → Store)
+        run: python run_pipeline.py --once
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          NEWS_API_KEY: ${{ secrets.NEWS_API_KEY }}
+          DATABASE_URL: sqlite:///./pasis.db
+
+      - name: Upload DB Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: pasis-db-${{ github.run_id }}
+          path: |
+            pasis.db
+            data/raw/
+            data/processed/
+          retention-days: 30
+
+      - name: Upload Pipeline Log
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: pipeline-log-${{ github.run_id }}
+          path: pasis_pipeline.log
+          retention-days: 7
