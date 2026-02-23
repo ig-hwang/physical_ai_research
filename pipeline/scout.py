@@ -126,12 +126,19 @@ class PhysicalAIScout:
                 scope = "Tech"
                 category = self._classify_arxiv_category(primary_cat)
 
+                # entry_id 는 "http://arxiv.org/abs/2410.24164v2" 형식
+                # → 버전 제거 + https 로 정규화
+                arxiv_id = result.get_short_id()
+                if "v" in arxiv_id:
+                    arxiv_id = arxiv_id[: arxiv_id.rfind("v")]
+                clean_url = f"https://arxiv.org/abs/{arxiv_id}"
+
                 record = _build_pasis_record(
                     scope=scope,
                     category=category,
                     title=result.title,
                     raw_content=result.summary,
-                    source_url=result.entry_id,
+                    source_url=clean_url,
                     publisher=f"arXiv ({primary_cat})",
                     published_at=result.published.replace(tzinfo=timezone.utc)
                     if result.published.tzinfo is None
@@ -212,9 +219,29 @@ class PhysicalAIScout:
                     form_type = src.get("form_type", "SEC")
                     entity_name = src.get("entity_name", "Unknown")
                     filing_date = src.get("file_date", datetime.utcnow().strftime("%Y-%m-%d"))
+
+                    # ── EDGAR 정규 URL 구성 (우선순위: adsh+entity_id > file_url > fallback) ──
+                    adsh = src.get("adsh", "")
+                    entity_id = src.get("entity_id", "")
                     filing_url = src.get("file_url", "")
-                    if not filing_url:
-                        filing_url = f"https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&company={entity_name}"
+
+                    if adsh and entity_id:
+                        # 가장 정확: 공시 인덱스 페이지
+                        adsh_clean = adsh.replace("-", "")
+                        filing_url = (
+                            f"https://www.sec.gov/Archives/edgar/data/{entity_id}"
+                            f"/{adsh_clean}/{adsh}-index.htm"
+                        )
+                    elif filing_url.startswith("/"):
+                        filing_url = f"https://www.sec.gov{filing_url}"
+                    elif not filing_url.startswith("http"):
+                        # 최후 수단: 회사별 공시 목록
+                        cik_param = entity_id if entity_id else entity_name.replace(" ", "+")
+                        filing_url = (
+                            f"https://www.sec.gov/cgi-bin/browse-edgar"
+                            f"?action=getcompany&CIK={cik_param}"
+                            f"&type={form_type}&dateb=&owner=include&count=10"
+                        )
 
                     # published_at 파싱
                     try:
@@ -227,7 +254,7 @@ class PhysicalAIScout:
                         category=self._classify_sec_form(form_type),
                         title=f"[{form_type}] {entity_name}: {src.get('period_of_report', filing_date)}",
                         raw_content=src.get("file_description", f"{form_type} filing by {entity_name}"),
-                        source_url=f"https://www.sec.gov{filing_url}" if filing_url.startswith("/") else filing_url,
+                        source_url=filing_url,
                         publisher=f"SEC EDGAR ({form_type})",
                         published_at=pub_dt,
                         confidence_score=CONFIDENCE_WEIGHTS.get("SEC", 0.95),

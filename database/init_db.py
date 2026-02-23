@@ -65,8 +65,37 @@ def init_db(seed_demo_data: bool = True) -> None:
         _seed_demo_data()
 
 
+def _fix_demo_urls() -> None:
+    """기존 데모 데이터의 잘못된 URL을 올바른 URL로 패치."""
+    broken_to_fixed = {
+        "https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&company=figure+ai":
+            "https://techcrunch.com/2024/02/29/figure-ai-raises-675m-from-microsoft-openai-nvidia-and-others/",
+        "https://www.sec.gov/Archives/edgar/data/1045810/000104581024000005/":
+            "https://nvidianews.nvidia.com/news/nvidia-to-acquire-runai",
+        "https://techcrunch.com/2024/01/18/figure-bmw-partnership/":
+            "https://techcrunch.com/2024/01/18/figure-lands-a-commercial-deal-with-bmw-manufacturing/",
+        "https://www.reuters.com/technology/amazon-robots-fulfillment/":
+            "https://www.aboutamazon.com/news/transportation/amazon-proteus-robot",
+    }
+    try:
+        with get_session() as session:
+            updated = 0
+            for old_url, new_url in broken_to_fixed.items():
+                rows = session.query(MarketSignal).filter_by(source_url=old_url).all()
+                for row in rows:
+                    row.source_url = new_url
+                    updated += 1
+            if updated:
+                log.info(f"데모 URL 패치 완료: {updated}건 수정")
+    except Exception as e:
+        log.warning(f"데모 URL 패치 실패 (무시): {e}")
+
+
 def _seed_demo_data() -> None:
     """Seed realistic Physical AI demo signals so the dashboard is immediately usable."""
+    # ── URL 수정 마이그레이션: 기존 데모 데이터의 broken URL 교체 ──────────────
+    _fix_demo_urls()
+
     with get_session() as session:
         existing = session.query(MarketSignal).count()
         if existing > 0:
@@ -87,8 +116,8 @@ def _seed_demo_data() -> None:
                 "BMW 공장 내 Figure 01 실제 배포로 상업 검증 완료",
                 "5G 연결 기반 실시간 로봇 제어 수요 확인"
             ],
-            "source_url": "https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&company=figure+ai",
-            "publisher": "SEC EDGAR / TechCrunch",
+            "source_url": "https://techcrunch.com/2024/02/29/figure-ai-raises-675m-from-microsoft-openai-nvidia-and-others/",
+            "publisher": "TechCrunch",
             "confidence_score": 0.92,
             "published_at": datetime.utcnow() - timedelta(days=7),
         },
@@ -104,8 +133,8 @@ def _seed_demo_data() -> None:
                 "AI 훈련 비용 절감이 Physical AI 상용화 임계점 낮춤",
                 "국내 AI 인프라 업체 경쟁력 점검 필요"
             ],
-            "source_url": "https://www.sec.gov/Archives/edgar/data/1045810/000104581024000005/",
-            "publisher": "SEC EDGAR (NVIDIA 8-K)",
+            "source_url": "https://nvidianews.nvidia.com/news/nvidia-to-acquire-runai",
+            "publisher": "NVIDIA Newsroom",
             "confidence_score": 0.95,
             "published_at": datetime.utcnow() - timedelta(days=14),
         },
@@ -191,7 +220,7 @@ def _seed_demo_data() -> None:
                 "초저지연 5G 필수 인프라로 통신사 협력 니즈 확인",
                 "국내 현대차/기아 대상 유사 모델 적용 타당성 검토 권고"
             ],
-            "source_url": "https://techcrunch.com/2024/01/18/figure-bmw-partnership/",
+            "source_url": "https://techcrunch.com/2024/01/18/figure-lands-a-commercial-deal-with-bmw-manufacturing/",
             "publisher": "TechCrunch",
             "confidence_score": 0.78,
             "published_at": datetime.utcnow() - timedelta(days=21),
@@ -208,8 +237,8 @@ def _seed_demo_data() -> None:
                 "5G 사설망 기반 AMR 제어가 핵심 솔루션 요소",
                 "안전/보안 규제 대응 컨설팅 니즈 동반 성장"
             ],
-            "source_url": "https://www.reuters.com/technology/amazon-robots-fulfillment/",
-            "publisher": "Reuters",
+            "source_url": "https://www.aboutamazon.com/news/transportation/amazon-proteus-robot",
+            "publisher": "About Amazon",
             "confidence_score": 0.82,
             "published_at": datetime.utcnow() - timedelta(days=30),
         },

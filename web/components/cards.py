@@ -17,7 +17,19 @@ PASIS UI Card Components - Streamlit 렌더링 모듈
 """
 from __future__ import annotations
 
+from urllib.parse import urlparse
+
 import streamlit as st
+
+
+def _is_valid_url(url: str) -> bool:
+    if not url:
+        return False
+    try:
+        p = urlparse(url)
+        return p.scheme in ("http", "https") and bool(p.netloc)
+    except Exception:
+        return False
 
 
 # ── 스코프별 색상 팔레트 ────────────────────────────────────────────────────────
@@ -258,10 +270,11 @@ def signal_card(row: dict, expanded: bool = False) -> None:
     with st.expander(header, expanded=expanded):
         # ── 출처 + 원문 버튼 ─────────────────────────────────────────────────
         col_src, col_btn = st.columns([4, 1])
+        url_ok = _is_valid_url(source_url)
         with col_src:
             meta_parts = [p for p in [publisher, category, pub_date] if p]
             st.caption("  ·  ".join(meta_parts))
-            if source_url:
+            if url_ok:
                 url_disp = source_url if len(source_url) <= 80 else source_url[:77] + "..."
                 st.markdown(
                     f'<a href="{source_url}" target="_blank" '
@@ -269,9 +282,16 @@ def signal_card(row: dict, expanded: bool = False) -> None:
                     f'{url_disp}</a>',
                     unsafe_allow_html=True,
                 )
+            else:
+                st.markdown(
+                    '<span style="font-size:0.78rem;color:#999;">원문 URL 없음</span>',
+                    unsafe_allow_html=True,
+                )
         with col_btn:
-            if source_url:
+            if url_ok:
                 st.link_button("원문 보기 →", source_url, use_container_width=True)
+            else:
+                st.button("URL 없음", disabled=True, use_container_width=True)
 
         st.divider()
 

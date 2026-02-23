@@ -14,6 +14,7 @@ import uuid
 from datetime import datetime, timedelta, timezone
 from typing import Optional
 from pathlib import Path
+from urllib.parse import urlparse
 import sys
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
@@ -26,6 +27,17 @@ log = logging.getLogger(__name__)
 
 REQUIRED_FIELDS = ["title", "scope", "source_metadata"]
 VALID_SCOPES = {"Market", "Tech", "Case", "Policy"}
+
+
+def _is_valid_url(url: str) -> bool:
+    """URL이 유효한 http/https 형식인지 검증."""
+    if not url:
+        return False
+    try:
+        parsed = urlparse(url)
+        return parsed.scheme in ("http", "https") and bool(parsed.netloc)
+    except Exception:
+        return False
 
 
 class DataArchivist:
@@ -65,6 +77,11 @@ class DataArchivist:
                 errors.append("source_metadata.url 누락")
             if not meta.get("published_at"):
                 errors.append("source_metadata.published_at 누락")
+
+            # URL 형식 검증
+            url = meta.get("url", "")
+            if url and not _is_valid_url(url):
+                errors.append(f"유효하지 않은 URL 형식: '{url[:80]}'")
 
             # confidence_score 범위 검증
             score = meta.get("confidence_score")
