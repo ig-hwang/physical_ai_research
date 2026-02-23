@@ -48,46 +48,63 @@ _SIGNAL_ANALYSIS_PROMPT = """당신은 LG유플러스 포트폴리오 전략팀�
   "lgu_relevance_type": "Direct Impact|Future Opportunity|Competitive Threat|Partnership Potential"
 }}"""
 
-_WEEKLY_REPORT_PROMPT = """당신은 LG유플러스 포트폴리오 전략팀의 Physical AI 시장 수석 분석가입니다.
-수집된 Physical AI 신호 {total}건을 종합하여 아래 구조의 전략 브리핑 HTML을 생성하십시오.
+_WEEKLY_REPORT_PROMPT = """당신은 LG유플러스 포트폴리오 전략팀의 Physical AI 수석 인텔리전스 분석가입니다.
+임원이 "5분 브리핑"으로 이번 주 Physical AI 시장 전체를 파악할 수 있는 HTML 보고서를 작성하십시오.
 
-[분석 원칙]
-- 피라미드 원칙: 핵심 결론 → 근거·데이터 → 액션
-- 데이터 기반: 구체적 수치·기업명·날짜 반드시 포함
-- Business Korean (기술 용어 영어 유지)
-- 각 섹션을 충실하게 작성 (단순 나열 금지, 해석·시사점 필수)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+[절대 금지 사항 — 위반 시 보고서 무효]
+- 수집 건수, 스코프별 통계 나열 → 금지
+- "총 N건이 수집되었습니다" 형식 → 금지
+- 신호를 단순 제목 리스트로 나열 → 금지
+- 분석·해석 없는 사실 나열 → 금지
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-[신호 데이터]
+[신호 데이터 — 이번 주 수집 {total}건 중 주요 신호]
 {signals_json}
 
-[필수 HTML 섹션 구조 — 이 순서와 제목 그대로 사용]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+[필수 HTML 구조 — 6개 섹션, 순서와 제목 그대로]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-1. Executive Summary
-   - 이번 주 Physical AI 시장의 핵심 결론 3가지 (불릿)
-   - 각 결론은 수치 또는 기업명 포함
+## SECTION 1 — 이번 주 핵심 메시지
+"이번 주 Physical AI 시장에서 가장 중요한 일은 무엇인가?"에 직접 답하는 1~2문단 서술.
+이어서 핵심 포인트 3개 불릿 (각각 수치 또는 기업명 필수 포함).
+독자가 이 섹션만 읽어도 이번 주 시장 흐름을 파악할 수 있어야 함.
 
-2. 이번 주 주요 트렌드
-   - 수집 신호에서 도출한 3~5개 거시 트렌드
-   - 각 트렌드: 제목 + 2~3문장 해설 + 관련 기업/기술 명시
+## SECTION 2 — 기업별 주요 동향 (Company Intelligence)
+신호에 등장한 주요 기업별로 소제목을 달고 서술. 데이터에 없는 기업은 포함하지 않음.
+각 기업 항목 형식:
+  → [사실] 이번 주 해당 기업에서 어떤 결정·발표·공시가 있었는가
+  → [해석] 그것이 Physical AI 생태계에서 왜 중요한가
+  → [LGU+ 관련성] LGU+ 전략팀 관점에서의 시사점 1문장
 
-3. 리서치 내용
-   - Market Signals: 주요 투자·M&A·IR 동향 (각 항목: 제목, 핵심 내용, 의미)
-   - Tech Frontier: 주목할 arXiv 논문·기술 발전 (각 항목: 제목, 기술 요점, 성숙도 평가)
-   - Real-world Cases: PoC·파트너십·상업 배포 사례 (각 항목: 사례, 결과 수치, 확산 가능성)
-   - Policy/Standards: 규제·표준 동향 (각 항목: 규정명, 주요 내용, 국내 영향)
+## SECTION 3 — 포착된 기술 트렌드 (Tech Trend Radar)
+이번 주 신호에서 도출되는 기술 흐름 3~5개를 트렌드 단위로 분석.
+"왜 지금 이 트렌드가 중요한가"에 집중. 단순 기술 설명 금지.
+각 트렌드: 트렌드 제목 | 근거 신호(논문/발표/사례) | 성숙도 [Early/Emerging/Mainstream] | 향후 전망 1문장
 
-4. 전략 참고사항
-   - 경쟁 환경 변화: 글로벌 플레이어 포지셔닝 변화 분석
-   - 주목 기업/기술: 이번 주 임계점에 도달한 기술·기업
-   - 시장 타이밍: 진입·투자·파트너십 최적 시점 평가
+## SECTION 4 — 시장 & 투자 흐름 (Market Pulse)
+"자금이 어디로 향하는가", "어떤 기업군이 강해지고 있는가" 관점으로 서술.
+투자·M&A·파트너십·공시 동향 종합 분석. 데이터가 없으면 섹션 생략.
 
-5. LGU+ 인사이트 & 권고 액션
-   - 즉시 검토 (1개월 이내): 구체적 액션 2~3개
-   - 중기 대응 (3~6개월): 준비 과제 2~3개
-   - 장기 전략 (1년+): 포지셔닝 방향 1~2개
+## SECTION 5 — 규제 & 표준 레이더 (Policy Watch)
+규제·표준 신호가 있을 경우만 작성. 없으면 섹션 생략.
+"이 변화가 시장 참여자에게 미치는 실질적 영향"에 집중.
 
-HTML만 반환하십시오 (마크다운 펜스·주석 없이).
-스타일은 인라인 CSS로 깔끔하게 작성하십시오."""
+## SECTION 6 — LGU+ 전략 액션 아이템
+모호한 표현("검토 필요", "관심 권고") 금지. 매우 구체적으로.
+- 즉시 (1개월 이내): 담당자가 다음 주 당장 할 수 있는 액션 2~3개
+- 단기 (3개월): 준비·구축 과제 2~3개
+- 중기 (6~12개월): 전략 포지셔닝 방향 1~2개
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+[HTML 출력 요건]
+- 순수 HTML만 반환 (코드블록 래핑·주석 없음)
+- 모든 스타일은 인라인 CSS. 폰트는 -apple-system, 'Malgun Gothic', sans-serif
+- 섹션별로 카드 스타일로 시각 구분 (배경색·테두리 활용)
+- 핵심 수치, 기업명은 <strong> 또는 색상으로 강조
+- source_url이 제공된 항목은 기업명 또는 논문명에 <a href="..." target="_blank"> 하이퍼링크 삽입
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"""
 
 
 class StrategicAnalyzer:
@@ -205,11 +222,18 @@ class StrategicAnalyzer:
         if not self._available or not signals:
             return self._fallback_weekly_report(signals)
 
-        # 스코프별 상위 신호 포함 (각 5건씩, 최대 20건)
+        # 신뢰도 기준 정렬 후 스코프별 상위 신호 선택 (각 8건씩, 최대 32건)
+        def _sort_key(s: dict) -> float:
+            return float(s.get("confidence_score") or s.get("data_quality_score") or 0.5)
+
         top_signals = []
         for scope in ["Market", "Tech", "Case", "Policy"]:
-            scope_sigs = [s for s in signals if s.get("scope") == scope]
-            top_signals.extend(scope_sigs[:5])
+            scope_sigs = sorted(
+                [s for s in signals if s.get("scope") == scope],
+                key=_sort_key,
+                reverse=True,
+            )
+            top_signals.extend(scope_sigs[:8])
 
         signals_summary = json.dumps(
             [
@@ -217,20 +241,22 @@ class StrategicAnalyzer:
                     "scope": s.get("scope"),
                     "category": s.get("category"),
                     "title": s.get("title", ""),
-                    "summary": (
+                    "content": (
                         s.get("summary")
                         or s.get("raw_content", "")
-                    )[:400],
+                    )[:500],
                     "strategic_implication": s.get("strategic_implication", ""),
                     "key_insights": s.get("key_insights", []),
                     "publisher": (
                         s.get("publisher")
                         or s.get("source_metadata", {}).get("publisher", "")
                     ),
+                    "source_url": s.get("source_url") or s.get("source_metadata", {}).get("url", ""),
                     "published_at": str(
                         s.get("published_at")
                         or s.get("source_metadata", {}).get("published_at", "")
                     )[:10],
+                    "confidence": round(_sort_key(s), 2),
                 }
                 for s in top_signals
             ],

@@ -18,11 +18,49 @@ st.markdown("""
     border-left: 5px solid #E4002B; padding-left: 14px;
     margin-bottom: 0.4rem;
   }
-  .section-h2 {
-    font-size: 1.15rem; font-weight: 800; color: #1A1A2E;
-    border-bottom: 2px solid #E4002B; padding-bottom: 5px;
-    margin: 1.4rem 0 0.7rem 0;
+  /* 리포트 HTML 래퍼 */
+  .pasis-report-body {
+    font-family: -apple-system, 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif;
+    font-size: 0.95rem;
+    line-height: 1.75;
+    color: #1A1A2E;
+    max-width: 100%;
   }
+  .pasis-report-body h1 {
+    font-size: 1.5rem; font-weight: 800;
+    color: #1A1A2E; margin-top: 0;
+  }
+  .pasis-report-body h2 {
+    font-size: 1.15rem; font-weight: 800;
+    color: #1A1A2E;
+    border-left: 4px solid #E4002B;
+    padding: 4px 0 4px 12px;
+    margin: 2rem 0 0.8rem 0;
+    background: linear-gradient(to right, #FFF0F0, transparent);
+  }
+  .pasis-report-body h3 {
+    font-size: 1rem; font-weight: 700;
+    color: #333; margin: 1.2rem 0 0.4rem 0;
+  }
+  .pasis-report-body ul { padding-left: 1.3rem; }
+  .pasis-report-body li { margin-bottom: 0.4rem; }
+  .pasis-report-body a {
+    color: #E4002B; text-decoration: none; font-weight: 600;
+  }
+  .pasis-report-body a:hover { text-decoration: underline; }
+  .pasis-report-body strong { color: #1A1A2E; }
+  .pasis-report-body table {
+    width: 100%; border-collapse: collapse; margin: 0.8rem 0;
+  }
+  .pasis-report-body th {
+    background: #1A1A2E; color: white;
+    padding: 8px 12px; font-size: 0.85rem;
+  }
+  .pasis-report-body td {
+    padding: 8px 12px; border-bottom: 1px solid #EEE;
+    font-size: 0.88rem;
+  }
+  .pasis-report-body tr:nth-child(even) td { background: #F9F9F9; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -91,7 +129,16 @@ with st.sidebar:
                 st.error(f"오류: {e}")
 
     st.divider()
-    st.caption("매주 월요일 09:00 KST 자동 생성\n수동 재생성도 가능합니다.")
+    st.caption(
+        "매주 월요일 09:00 KST 자동 생성\n"
+        "수동 재생성도 가능합니다.\n\n"
+        "📌 **리포트 포함 내용**\n"
+        "- 이번 주 핵심 메시지\n"
+        "- 기업별 주요 동향\n"
+        "- 포착된 기술 트렌드\n"
+        "- 시장 & 투자 흐름\n"
+        "- LGU+ 전략 액션 아이템"
+    )
 
 
 # ── 헤더 ─────────────────────────────────────────────────────────────────────
@@ -127,8 +174,11 @@ st.divider()
 html_content = report.get("full_report_html", "")
 
 if html_content and len(html_content) > 100:
-    # components.html 대신 st.markdown으로 렌더링 (스크롤 제한 없음)
-    st.markdown(html_content, unsafe_allow_html=True)
+    # pasis-report-body 클래스로 감싸서 공통 타이포그래피 CSS 적용
+    st.markdown(
+        f'<div class="pasis-report-body">{html_content}</div>',
+        unsafe_allow_html=True,
+    )
 else:
     st.warning("리포트 내용이 없습니다. 사이드바에서 재생성해 주세요.")
     signals = load_signals_for_report(days_back=90)
@@ -153,14 +203,43 @@ with col_dl1:
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>LGU+ Physical AI 전략 브리핑 {iso}</title>
   <style>
-    body {{ font-family: -apple-system, 'Malgun Gothic', sans-serif;
-           line-height: 1.7; color: #1A1A2E;
-           max-width: 960px; margin: 0 auto; padding: 2rem; }}
-    h1, h2, h3 {{ color: #1A1A2E; }}
-    h2 {{ border-bottom: 2px solid #E4002B; padding-bottom: 6px; }}
+    body {{
+      font-family: -apple-system, 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif;
+      font-size: 15px; line-height: 1.75; color: #1A1A2E;
+      max-width: 960px; margin: 0 auto; padding: 2.5rem 2rem;
+      background: #FAFBFC;
+    }}
+    h1 {{ font-size: 1.7rem; font-weight: 800; border-bottom: 3px solid #E4002B; padding-bottom: 10px; }}
+    h2 {{
+      font-size: 1.15rem; font-weight: 800; color: #1A1A2E;
+      border-left: 4px solid #E4002B; padding: 4px 0 4px 12px;
+      background: linear-gradient(to right, #FFF0F0, transparent);
+      margin: 2rem 0 0.8rem 0;
+    }}
+    h3 {{ font-size: 1rem; font-weight: 700; color: #333; margin: 1.2rem 0 0.4rem 0; }}
+    a {{ color: #E4002B; text-decoration: none; font-weight: 600; }}
+    a:hover {{ text-decoration: underline; }}
+    ul {{ padding-left: 1.3rem; }}
+    li {{ margin-bottom: 0.4rem; }}
+    table {{ width: 100%; border-collapse: collapse; margin: 0.8rem 0; }}
+    th {{ background: #1A1A2E; color: white; padding: 8px 12px; font-size: 0.85rem; }}
+    td {{ padding: 8px 12px; border-bottom: 1px solid #EEE; font-size: 0.88rem; }}
+    tr:nth-child(even) td {{ background: #F9F9F9; }}
+    .report-header {{
+      background: #1A1A2E; color: white; padding: 1.5rem 2rem;
+      border-radius: 8px; margin-bottom: 1.5rem;
+    }}
+    .report-header h1 {{ color: white; border-bottom: none; padding-bottom: 0; margin: 0 0 4px 0; }}
+    .report-header p {{ margin: 0; opacity: 0.75; font-size: 0.85rem; }}
   </style>
 </head>
-<body>{html_content}</body>
+<body>
+  <div class="report-header">
+    <h1>LGU+ Physical AI 전략 브리핑</h1>
+    <p>{iso} · 생성: {gen_str} · PASIS v1.0</p>
+  </div>
+  {html_content}
+</body>
 </html>"""
         st.download_button(
             "📄 HTML 리포트 다운로드",
