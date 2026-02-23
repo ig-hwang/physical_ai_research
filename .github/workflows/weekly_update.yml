@@ -31,28 +31,18 @@ jobs:
       - name: Install Dependencies
         run: pip install -r requirements.txt
 
-      - name: Initialize Database
+      - name: Initialize Database (Supabase)
         run: python run_pipeline.py --init
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-          DATABASE_URL: sqlite:///./pasis.db
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
 
-      - name: Run Pipeline (Collect → Analyze → Store)
+      - name: Run Pipeline (Collect → Analyze → Store → Report)
         run: python run_pipeline.py --once
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           NEWS_API_KEY: ${{ secrets.NEWS_API_KEY }}
-          DATABASE_URL: sqlite:///./pasis.db
-
-      - name: Upload DB Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: pasis-db-${{ github.run_id }}
-          path: |
-            pasis.db
-            data/raw/
-            data/processed/
-          retention-days: 30
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
 
       - name: Upload Pipeline Log
         uses: actions/upload-artifact@v4
