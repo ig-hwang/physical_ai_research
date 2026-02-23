@@ -217,8 +217,13 @@ class PhysicalAIScout:
                 for hit in hits[:5]:  # 키워드당 최대 5건
                     src = hit.get("_source", {})
                     form_type = src.get("form_type", "SEC")
-                    entity_name = src.get("entity_name", "Unknown")
+                    entity_name = src.get("entity_name", "").strip()
                     filing_date = src.get("file_date", datetime.utcnow().strftime("%Y-%m-%d"))
+
+                    # 기업명 없는 결과 → URL을 제대로 구성할 수 없으므로 스킵
+                    if not entity_name or entity_name.lower() in ("unknown", "n/a", ""):
+                        log.debug(f"SEC: entity_name 없음, 스킵 (adsh={src.get('adsh','')})")
+                        continue
 
                     # ── EDGAR 정규 URL 구성 (우선순위: adsh+entity_id > file_url > fallback) ──
                     adsh = src.get("adsh", "")

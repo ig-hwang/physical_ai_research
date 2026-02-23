@@ -22,12 +22,24 @@ from urllib.parse import urlparse
 import streamlit as st
 
 
+_USELESS_URL_PATTERNS = (
+    "company=Unknown",       # SEC EDGAR 기업명 미확인 fallback
+    "browse-edgar?company=", # SEC EDGAR 일반 검색 (특정 공시 아님)
+)
+
+
 def _is_valid_url(url: str) -> bool:
+    """실제 원문으로 연결되는 유효한 URL인지 검사."""
     if not url:
         return False
     try:
         p = urlparse(url)
-        return p.scheme in ("http", "https") and bool(p.netloc)
+        if p.scheme not in ("http", "https") or not p.netloc:
+            return False
+        # 원문 없이 검색 결과로만 연결되는 fallback URL 제외
+        if any(pat in url for pat in _USELESS_URL_PATTERNS):
+            return False
+        return True
     except Exception:
         return False
 

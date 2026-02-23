@@ -68,14 +68,25 @@ def init_db(seed_demo_data: bool = True) -> None:
 def _fix_demo_urls() -> None:
     """기존 데모 데이터의 잘못된 URL을 올바른 URL로 패치."""
     broken_to_fixed = {
+        # 이전 버전 잘못된 URL → 수정
         "https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&company=figure+ai":
-            "https://techcrunch.com/2024/02/29/figure-ai-raises-675m-from-microsoft-openai-nvidia-and-others/",
+            "https://www.figure.ai/",
         "https://www.sec.gov/Archives/edgar/data/1045810/000104581024000005/":
             "https://nvidianews.nvidia.com/news/nvidia-to-acquire-runai",
         "https://techcrunch.com/2024/01/18/figure-bmw-partnership/":
-            "https://techcrunch.com/2024/01/18/figure-lands-a-commercial-deal-with-bmw-manufacturing/",
+            "https://www.figure.ai/",
         "https://www.reuters.com/technology/amazon-robots-fulfillment/":
-            "https://www.aboutamazon.com/news/transportation/amazon-proteus-robot",
+            "https://www.aboutamazon.com/news/operations/10-ways-amazon-uses-robots-in-its-fulfillment-centers",
+        # 추정 슬러그 → 안정 URL로 교체
+        "https://techcrunch.com/2024/02/29/figure-ai-raises-675m-from-microsoft-openai-nvidia-and-others/":
+            "https://www.figure.ai/",
+        "https://techcrunch.com/2024/01/18/figure-lands-a-commercial-deal-with-bmw-manufacturing/":
+            "https://www.figure.ai/",
+        "https://www.aboutamazon.com/news/transportation/amazon-proteus-robot":
+            "https://www.aboutamazon.com/news/operations/10-ways-amazon-uses-robots-in-its-fulfillment-centers",
+        # SEC Unknown fallback → 원문 없음으로 처리
+        "https://www.sec.gov/cgi-bin/browse-edgar?company=Unknown":
+            "",
     }
     try:
         with get_session() as session:
@@ -116,8 +127,8 @@ def _seed_demo_data() -> None:
                 "BMW 공장 내 Figure 01 실제 배포로 상업 검증 완료",
                 "5G 연결 기반 실시간 로봇 제어 수요 확인"
             ],
-            "source_url": "https://techcrunch.com/2024/02/29/figure-ai-raises-675m-from-microsoft-openai-nvidia-and-others/",
-            "publisher": "TechCrunch",
+            "source_url": "https://www.figure.ai/",
+            "publisher": "Figure AI (Official)",
             "confidence_score": 0.92,
             "published_at": datetime.utcnow() - timedelta(days=7),
         },
@@ -220,8 +231,8 @@ def _seed_demo_data() -> None:
                 "초저지연 5G 필수 인프라로 통신사 협력 니즈 확인",
                 "국내 현대차/기아 대상 유사 모델 적용 타당성 검토 권고"
             ],
-            "source_url": "https://techcrunch.com/2024/01/18/figure-lands-a-commercial-deal-with-bmw-manufacturing/",
-            "publisher": "TechCrunch",
+            "source_url": "https://www.figure.ai/",
+            "publisher": "Figure AI (Official)",
             "confidence_score": 0.78,
             "published_at": datetime.utcnow() - timedelta(days=21),
         },
@@ -237,7 +248,7 @@ def _seed_demo_data() -> None:
                 "5G 사설망 기반 AMR 제어가 핵심 솔루션 요소",
                 "안전/보안 규제 대응 컨설팅 니즈 동반 성장"
             ],
-            "source_url": "https://www.aboutamazon.com/news/transportation/amazon-proteus-robot",
+            "source_url": "https://www.aboutamazon.com/news/operations/10-ways-amazon-uses-robots-in-its-fulfillment-centers",
             "publisher": "About Amazon",
             "confidence_score": 0.82,
             "published_at": datetime.utcnow() - timedelta(days=30),
