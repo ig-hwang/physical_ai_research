@@ -18,51 +18,121 @@ st.markdown("""
     border-left: 5px solid #E4002B; padding-left: 14px;
     margin-bottom: 0.4rem;
   }
-  /* 리포트 HTML 래퍼 */
+
+  /* ── 리포트 공통 래퍼 ─────────────────────────────────── */
   .pasis-report-body {
     font-family: -apple-system, 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif;
-    font-size: 0.95rem;
-    line-height: 1.75;
-    color: #1A1A2E;
-    max-width: 100%;
+    font-size: 0.94rem; line-height: 1.8; color: #1A1A2E;
   }
-  .pasis-report-body h1 {
-    font-size: 1.5rem; font-weight: 800;
-    color: #1A1A2E; margin-top: 0;
-  }
-  .pasis-report-body h2 {
-    font-size: 1.15rem; font-weight: 800;
-    color: #1A1A2E;
-    border-left: 4px solid #E4002B;
-    padding: 4px 0 4px 12px;
-    margin: 2rem 0 0.8rem 0;
-    background: linear-gradient(to right, #FFF0F0, transparent);
-  }
-  .pasis-report-body h3 {
-    font-size: 1rem; font-weight: 700;
-    color: #333; margin: 1.2rem 0 0.4rem 0;
-  }
-  .pasis-report-body ul { padding-left: 1.3rem; }
-  .pasis-report-body li { margin-bottom: 0.4rem; }
-  .pasis-report-body a {
-    color: #E4002B; text-decoration: none; font-weight: 600;
-  }
+  .pasis-report-body a { color: #E4002B; font-weight: 600; text-decoration: none; }
   .pasis-report-body a:hover { text-decoration: underline; }
   .pasis-report-body strong { color: #1A1A2E; }
-  .pasis-report-body table {
-    width: 100%; border-collapse: collapse; margin: 0.8rem 0;
+  .pasis-report-body ul { padding-left: 1.2rem; }
+  .pasis-report-body li { margin-bottom: 0.35rem; }
+
+  /* ── 섹션 카드 ───────────────────────────────────────── */
+  .rpt-section {
+    background: #ffffff; border: 1px solid #E8ECF0;
+    border-radius: 12px; padding: 22px 26px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
   }
-  .pasis-report-body th {
-    background: #1A1A2E; color: white;
-    padding: 8px 12px; font-size: 0.85rem;
+  .rpt-section-title {
+    font-size: 1.1rem; font-weight: 800; color: #1A1A2E;
+    border-left: 4px solid #E4002B; padding: 3px 0 3px 12px;
+    background: linear-gradient(to right, #FFF0F0, transparent);
+    margin-bottom: 16px;
   }
-  .pasis-report-body td {
-    padding: 8px 12px; border-bottom: 1px solid #EEE;
-    font-size: 0.88rem;
+  .rpt-body { margin-bottom: 10px; }
+  .rpt-bullets { padding-left: 1.2rem; margin: 8px 0; }
+  .rpt-bullets li {
+    padding: 8px 14px; margin-bottom: 8px;
+    background: #F8F9FB; border-left: 3px solid #E4002B;
+    border-radius: 0 6px 6px 0; list-style: none;
+    margin-left: -1.2rem;
   }
-  .pasis-report-body tr:nth-child(even) td { background: #F9F9F9; }
+
+  /* ── 기업별 동향 ─────────────────────────────────────── */
+  .rpt-company {
+    border: 1px solid #E8ECF0; border-radius: 10px;
+    padding: 16px 20px; margin-bottom: 14px;
+    background: #FAFBFC;
+  }
+  .rpt-company-name {
+    font-size: 1rem; font-weight: 800; color: #1A1A2E;
+    margin-bottom: 10px; padding-bottom: 8px;
+    border-bottom: 1px solid #EEE;
+  }
+  .rpt-company-name a { color: #1A1A2E; }
+  .rpt-fact, .rpt-why, .rpt-lgu {
+    padding: 6px 0 6px 12px; margin-bottom: 4px;
+    font-size: 0.88rem; border-left: 2px solid transparent;
+  }
+  .rpt-fact { border-color: #888; color: #333; }
+  .rpt-why  { border-color: #1A1AEA; color: #1A1A2E; }
+  .rpt-lgu  { border-color: #E4002B; color: #C00020; font-weight: 600; }
+
+  /* ── 기술 트렌드 ─────────────────────────────────────── */
+  .rpt-trend {
+    padding: 14px 18px; margin-bottom: 12px;
+    border-radius: 8px; background: #F0F0FF;
+    border-left: 3px solid #1A1AEA;
+  }
+  .rpt-trend-title {
+    font-weight: 700; color: #1A1A2E; margin-bottom: 6px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .rpt-badge {
+    font-size: 0.68rem; font-weight: 700; padding: 1px 8px;
+    border-radius: 10px; white-space: nowrap;
+    background: #1A1AEA; color: white;
+  }
+  .rpt-badge.early   { background: #F5A623; color: white; }
+  .rpt-badge.emerging{ background: #1A1AEA; color: white; }
+  .rpt-badge.mainstream { background: #00A651; color: white; }
+
+  /* ── LGU+ 액션 아이템 ────────────────────────────────── */
+  .rpt-action {
+    padding: 10px 16px; margin-bottom: 8px;
+    border-radius: 8px; font-size: 0.88rem;
+  }
+  .rpt-action--now   { background: #FFF0F0; border-left: 3px solid #E4002B; }
+  .rpt-action--short { background: #FFF8E1; border-left: 3px solid #F5A623; }
+  .rpt-action--mid   { background: #F0FFF5; border-left: 3px solid #00A651; }
 </style>
 """, unsafe_allow_html=True)
+
+
+def _extract_body(html: str) -> tuple[str, str]:
+    """
+    HTML에서 <style> CSS와 body 콘텐츠를 분리.
+    - Full HTML 문서(<!DOCTYPE ...>): <style>과 <body> 내용 추출
+    - HTML 조각(fragment): 그대로 body로 사용
+    - </body> 없이 잘린 경우도 처리
+    """
+    import re
+    html = html.strip()
+
+    # <style> 블록 추출 (있는 경우)
+    style_match = re.search(r"<style[^>]*>(.*?)</style>", html, re.DOTALL | re.IGNORECASE)
+    css = style_match.group(1) if style_match else ""
+
+    # Full HTML 문서인 경우 <body> 이후 내용 추출 (</body> 없어도 동작)
+    if html.startswith(("<!DOCTYPE", "<html", "<!doctype")):
+        body_open = re.search(r"<body[^>]*>", html, re.IGNORECASE)
+        if body_open:
+            body = html[body_open.end():]
+            # </body> 있으면 그 앞까지만
+            body_close = re.search(r"</body>", body, re.IGNORECASE)
+            if body_close:
+                body = body[:body_close.start()]
+        else:
+            body = html
+    else:
+        # 이미 fragment
+        body = html
+
+    return css, body.strip()
 
 
 @st.cache_data(ttl=300)
@@ -174,9 +244,12 @@ st.divider()
 html_content = report.get("full_report_html", "")
 
 if html_content and len(html_content) > 100:
-    # pasis-report-body 클래스로 감싸서 공통 타이포그래피 CSS 적용
+    css, body = _extract_body(html_content)
+    # Claude 자체 CSS가 있으면 함께 주입 (없어도 pasis-report-body CSS가 커버)
+    if css:
+        st.markdown(f"<style>{css}</style>", unsafe_allow_html=True)
     st.markdown(
-        f'<div class="pasis-report-body">{html_content}</div>',
+        f'<div class="pasis-report-body">{body}</div>',
         unsafe_allow_html=True,
     )
 else:

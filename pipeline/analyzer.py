@@ -52,11 +52,20 @@ _WEEKLY_REPORT_PROMPT = """당신은 LG유플러스 포트폴리오 전략팀의
 임원이 "5분 브리핑"으로 이번 주 Physical AI 시장 전체를 파악할 수 있는 HTML 보고서를 작성하십시오.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-[절대 금지 사항 — 위반 시 보고서 무효]
+[최우선 준수 사항]
+▶ 6개 섹션 전부 완성 필수. 섹션 중간 잘림 금지.
+▶ 분량 제한 엄수 (초과하면 마지막 섹션이 잘림):
+   Section 1: 핵심 포인트 3개, 각 2문장 이내
+   Section 2: 최대 4개 기업, 기업당 사실·해석·LGU+ 각 1~2문장
+   Section 3: 최대 4개 트렌드, 트렌드당 2문장 이내
+   Section 4: 200자 이내 산문 + 불릿 2~3개
+   Section 5: 150자 이내 (데이터 없으면 생략)
+   Section 6: 타임라인별 액션 1~2개, 각 1문장
+
+[절대 금지 사항]
 - 수집 건수, 스코프별 통계 나열 → 금지
 - "총 N건이 수집되었습니다" 형식 → 금지
 - 신호를 단순 제목 리스트로 나열 → 금지
-- 분석·해석 없는 사실 나열 → 금지
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 [신호 데이터 — 이번 주 수집 {total}건 중 주요 신호]
@@ -98,12 +107,38 @@ _WEEKLY_REPORT_PROMPT = """당신은 LG유플러스 포트폴리오 전략팀의
 - 중기 (6~12개월): 전략 포지셔닝 방향 1~2개
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-[HTML 출력 요건]
-- 순수 HTML만 반환 (코드블록 래핑·주석 없음)
-- 모든 스타일은 인라인 CSS. 폰트는 -apple-system, 'Malgun Gothic', sans-serif
-- 섹션별로 카드 스타일로 시각 구분 (배경색·테두리 활용)
-- 핵심 수치, 기업명은 <strong> 또는 색상으로 강조
-- source_url이 제공된 항목은 기업명 또는 논문명에 <a href="..." target="_blank"> 하이퍼링크 삽입
+[HTML 출력 요건 — 반드시 준수]
+① <!DOCTYPE>, <html>, <head>, <body>, <style> 태그 완전 금지 — HTML 조각(fragment)만 반환
+② CSS·인라인 스타일 일절 금지 — 아래 지정 클래스만 사용
+③ 코드블록 래핑(```html ... ```) 금지 — 순수 HTML 텍스트만 출력
+
+[사용 가능 HTML 구조]
+<div class="rpt-section">
+  <div class="rpt-section-title">섹션 제목</div>
+  <div class="rpt-body">본문 내용 <strong>강조</strong></div>
+  <ul class="rpt-bullets"><li>항목</li></ul>
+</div>
+
+기업별 동향:
+<div class="rpt-company">
+  <div class="rpt-company-name"><a href="URL">기업명</a></div>
+  <div class="rpt-fact"><strong>사실</strong> 내용</div>
+  <div class="rpt-why">해석 내용</div>
+  <div class="rpt-lgu">LGU+ 관련성 내용</div>
+</div>
+
+기술 트렌드:
+<div class="rpt-trend">
+  <div class="rpt-trend-title">트렌드명 <span class="rpt-badge">Emerging</span></div>
+  <div class="rpt-body">근거 및 전망</div>
+</div>
+
+LGU+ 액션:
+<div class="rpt-action rpt-action--now">즉시(1개월): 구체적 액션</div>
+<div class="rpt-action rpt-action--short">단기(3개월): 준비 과제</div>
+<div class="rpt-action rpt-action--mid">중기(6~12개월): 전략 방향</div>
+
+source_url이 있는 경우 기업명·논문명에 반드시 <a href="URL" target="_blank">하이퍼링크</a> 삽입.
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"""
 
 
@@ -222,7 +257,8 @@ class StrategicAnalyzer:
         if not self._available or not signals:
             return self._fallback_weekly_report(signals)
 
-        # 신뢰도 기준 정렬 후 스코프별 상위 신호 선택 (각 8건씩, 최대 32건)
+        # 신뢰도 기준 정렬 후 스코프별 상위 신호 선택 (각 5건씩, 최대 20건)
+        # 8192 토큰 출력 한도 내 6개 섹션 완성을 위해 입력 신호 수 최적화
         def _sort_key(s: dict) -> float:
             return float(s.get("confidence_score") or s.get("data_quality_score") or 0.5)
 
@@ -233,7 +269,7 @@ class StrategicAnalyzer:
                 key=_sort_key,
                 reverse=True,
             )
-            top_signals.extend(scope_sigs[:8])
+            top_signals.extend(scope_sigs[:5])
 
         signals_summary = json.dumps(
             [
