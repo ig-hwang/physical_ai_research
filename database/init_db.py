@@ -76,14 +76,23 @@ def _fix_demo_urls() -> None:
         "https://techcrunch.com/2024/01/18/figure-bmw-partnership/":
             "https://www.figure.ai/",
         "https://www.reuters.com/technology/amazon-robots-fulfillment/":
-            "https://www.aboutamazon.com/news/operations/10-ways-amazon-uses-robots-in-its-fulfillment-centers",
+            "https://www.aboutamazon.com/news/tag/robotics",
         # 추정 슬러그 → 안정 URL로 교체
         "https://techcrunch.com/2024/02/29/figure-ai-raises-675m-from-microsoft-openai-nvidia-and-others/":
             "https://www.figure.ai/",
         "https://techcrunch.com/2024/01/18/figure-lands-a-commercial-deal-with-bmw-manufacturing/":
             "https://www.figure.ai/",
+        # Amazon: 이전 및 현재 broken URL 모두 → 안정 URL로
         "https://www.aboutamazon.com/news/transportation/amazon-proteus-robot":
-            "https://www.aboutamazon.com/news/operations/10-ways-amazon-uses-robots-in-its-fulfillment-centers",
+            "https://www.aboutamazon.com/news/tag/robotics",
+        "https://www.aboutamazon.com/news/operations/10-ways-amazon-uses-robots-in-its-fulfillment-centers":
+            "https://www.aboutamazon.com/news/tag/robotics",
+        # Tesla IR: 404 페이지 → Tesla IR 홈으로
+        "https://ir.tesla.com/sec-filings/annual-reports":
+            "https://ir.tesla.com/",
+        # NIST: 경로 변경 → 현재 AIRC 홈으로
+        "https://airc.nist.gov/RMF":
+            "https://airc.nist.gov/Home",
         # SEC Unknown fallback → 원문 없음으로 처리
         "https://www.sec.gov/cgi-bin/browse-edgar?company=Unknown":
             "",
@@ -161,7 +170,7 @@ def _seed_demo_data() -> None:
                 "공장 내 5G 연결 필수 인프라로 부상",
                 "국내 스마트팩토리 업체 대상 로봇 연동 솔루션 기회"
             ],
-            "source_url": "https://ir.tesla.com/sec-filings/annual-reports",
+            "source_url": "https://ir.tesla.com/",
             "publisher": "Tesla IR (10-K 2024)",
             "confidence_score": 0.90,
             "published_at": datetime.utcnow() - timedelta(days=3),
@@ -248,7 +257,7 @@ def _seed_demo_data() -> None:
                 "5G 사설망 기반 AMR 제어가 핵심 솔루션 요소",
                 "안전/보안 규제 대응 컨설팅 니즈 동반 성장"
             ],
-            "source_url": "https://www.aboutamazon.com/news/operations/10-ways-amazon-uses-robots-in-its-fulfillment-centers",
+            "source_url": "https://www.aboutamazon.com/news/tag/robotics",
             "publisher": "About Amazon",
             "confidence_score": 0.82,
             "published_at": datetime.utcnow() - timedelta(days=30),
@@ -283,7 +292,7 @@ def _seed_demo_data() -> None:
                 "국내 과기부 AI 안전 가이드라인과 NIST 프레임워크 정합성 확인 필요",
                 "LGU+ AI 서비스 전반 NIST 프레임워크 적용 검토"
             ],
-            "source_url": "https://airc.nist.gov/RMF",
+            "source_url": "https://airc.nist.gov/Home",
             "publisher": "NIST",
             "confidence_score": 0.94,
             "published_at": datetime.utcnow() - timedelta(days=60),

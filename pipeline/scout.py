@@ -239,8 +239,10 @@ class PhysicalAIScout:
                         )
                     elif filing_url.startswith("/"):
                         filing_url = f"https://www.sec.gov{filing_url}"
-                    elif not filing_url.startswith("http"):
-                        # 최후 수단: 회사별 공시 목록
+                    elif filing_url.startswith("http") and "sec.gov" in filing_url:
+                        pass  # sec.gov 절대 URL → 그대로 사용
+                    else:
+                        # non-sec URL 또는 URL 없음 → 회사별 공시 목록 fallback
                         cik_param = entity_id if entity_id else entity_name.replace(" ", "+")
                         filing_url = (
                             f"https://www.sec.gov/cgi-bin/browse-edgar"
