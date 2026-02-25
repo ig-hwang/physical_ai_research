@@ -72,10 +72,29 @@ PLAYER_MAP = {p["name"]: p for p in KEY_PLAYERS}
 # ── 데이터 로드 ────────────────────────────────────────────────────────────────
 @st.cache_data(ttl=300)
 def load_news_feed(company: Optional[str], days_back: int) -> pd.DataFrame:
+    from datetime import datetime, timedelta
     from database.init_db import get_session
-    from database.queries import get_news_feed_df
+    from database.models import MarketSignal
+
+    cutoff = datetime.utcnow() - timedelta(days=days_back)
     with get_session() as session:
-        return get_news_feed_df(session, company=company, days_back=days_back)
+        q = session.query(MarketSignal).filter(
+            MarketSignal.processing_pipeline == "news_feed",
+            MarketSignal.published_at >= cutoff,
+        )
+        if company:
+            q = q.filter(MarketSignal.category == company)
+        rows = q.order_by(MarketSignal.published_at.desc()).limit(200).all()
+
+    return pd.DataFrame([{
+        "title": r.title,
+        "source_url": r.source_url,
+        "publisher": r.publisher,
+        "category": r.category,
+        "published_at": r.published_at,
+        "confidence_score": r.confidence_score,
+        "key_insights": r.key_insights or [],
+    } for r in rows])
 
 
 # ── 사이드바 ───────────────────────────────────────────────────────────────────
