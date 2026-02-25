@@ -7,6 +7,7 @@ import sys
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
+from typing import Optional
 import pandas as pd
 import streamlit as st
 
@@ -47,15 +48,30 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 
-# ── Key Player 정의 (config에서 로드) ─────────────────────────────────────────
-from config import KEY_PLAYERS
+# ── Key Player 정의 (인라인 — config 모듈 레벨 임포트 방지) ───────────────────
+KEY_PLAYERS = [
+    {"name": "NVIDIA",            "category_label": "Brain & Platform",       "color": "#76B900",
+     "must_watch": ["GR00T", "Isaac Lab", "Jetson Thor"]},
+    {"name": "Google DeepMind",   "category_label": "Brain & Platform",       "color": "#4285F4",
+     "must_watch": ["RT-2", "AutoRT", "PaLM-E"]},
+    {"name": "Tesla",             "category_label": "End-to-End AI",          "color": "#CC0000",
+     "must_watch": ["Optimus", "FSD", "Dojo"]},
+    {"name": "Figure AI",         "category_label": "Hardware & Logic",       "color": "#FF6B00",
+     "must_watch": ["Figure 02", "Figure 03", "OpenAI Partnership"]},
+    {"name": "Agility Robotics",  "category_label": "Industrial / Logistics", "color": "#00875A",
+     "must_watch": ["Digit", "Toyota Partnership", "Amazon Partnership"]},
+    {"name": "Amazon Robotics",   "category_label": "Infrastructure",         "color": "#FF9900",
+     "must_watch": ["Sequoia", "Proteus", "Culper"]},
+    {"name": "Sanctuary AI",      "category_label": "Specialized Brain",      "color": "#7B2FBE",
+     "must_watch": ["Phoenix", "Carbon OS"]},
+]
 
-PLAYER_MAP: dict[str, dict] = {p["name"]: p for p in KEY_PLAYERS}
+PLAYER_MAP = {p["name"]: p for p in KEY_PLAYERS}
 
 
 # ── 데이터 로드 ────────────────────────────────────────────────────────────────
 @st.cache_data(ttl=300)
-def load_news_feed(company: str | None, days_back: int) -> pd.DataFrame:
+def load_news_feed(company: Optional[str], days_back: int) -> pd.DataFrame:
     from database.init_db import get_session
     from database.queries import get_news_feed_df
     with get_session() as session:
@@ -138,7 +154,7 @@ st.divider()
 st.markdown(f"#### 뉴스 피드 — {selected_company} ({len(df)}건)")
 
 for _, row in df.iterrows():
-    company_name: str = row.get("category", "")
+    company_name = str(row.get("category", ""))
     player_cfg = PLAYER_MAP.get(company_name, {})
     color = player_cfg.get("color", "#888888")
 
@@ -155,7 +171,6 @@ for _, row in df.iterrows():
     source_url = row.get("source_url", "#")
     title = row.get("title", "(제목 없음)")
 
-    # Must-Watch 태그 매칭 (key_insights 필드)
     insights = row.get("key_insights") or []
     tags_html = "".join(
         f'<span class="must-watch-tag">{t}</span>'
