@@ -411,6 +411,70 @@ class PhysicalAIScout:
 
         return all_records
 
+    # ── 5. Key Player News Feed ─────────────────────────────────────────────
+
+    def fetch_key_player_news(
+        self,
+        players: list[dict] = None,
+        days_back: int = 14,
+    ) -> list[dict]:
+        """Key Player별 Google News RSS + 공식 블로그 뉴스 수집.
+        Claude 분석 없이 빠른 피드용. processing_pipeline='news_feed' 마킹.
+        """
+        if players is None:
+            from config import KEY_PLAYERS
+            players = KEY_PLAYERS
+
+        records: list[dict] = []
+        cutoff = datetime.now(timezone.utc) - timedelta(days=days_back)
+
+        for player in players:
+            company_name = player["name"]
+            for feed_cfg in player["feeds"]:
+                feed_url = feed_cfg["url"]
+                try:
+                    parsed = feedparser.parse(feed_url)
+                    for entry in parsed.entries:
+                        title = getattr(entry, "title", "") or ""
+                        summary = getattr(entry, "summary", "") or getattr(entry, "description", "") or ""
+                        link = getattr(entry, "link", "") or ""
+                        published_parsed = getattr(entry, "published_parsed", None)
+
+                        if not title or not link:
+                            continue
+
+                        source = getattr(entry, "source", None)
+                        publisher_name = getattr(source, "title", company_name) if source else company_name
+
+                        if published_parsed:
+                            pub_dt = datetime(*published_parsed[:6], tzinfo=timezone.utc)
+                        else:
+                            pub_dt = datetime.now(timezone.utc)
+
+                        if pub_dt < cutoff:
+                            continue
+
+                        record = _build_pasis_record(
+                            scope="Case",
+                            category=company_name,
+                            title=title,
+                            raw_content=summary[:2000],
+                            source_url=link,
+                            publisher=publisher_name,
+                            published_at=pub_dt,
+                            confidence_score=0.75,
+                            extra_meta={
+                                "processing_pipeline": "news_feed",
+                                "key_insights": player["must_watch"],
+                            },
+                        )
+                        records.append(record)
+                except Exception as e:
+                    log.error(f"Key Player 뉴스 수집 오류 ({company_name}): {e}")
+
+        log.info(f"Key Player 뉴스 수집 완료: {len(records)}건")
+        return records
+
     def _save_raw(self, records: list[dict]) -> None:
         """raw 데이터를 data/raw/{YYYYMMDD}_scout.json 형식으로 저장."""
         RAW_DIR.mkdir(parents=True, exist_ok=True)

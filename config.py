@@ -82,6 +82,48 @@ NEWS_RSS_FEEDS: list[dict] = [
     {"name": "The Robot Report", "url": "https://www.therobotreport.com/feed/", "scope": "Case"},
 ]
 
+# ── Key Players (News Feed) ───────────────────────────────────────────────────
+KEY_PLAYERS: list[dict] = [
+    {"name": "NVIDIA",            "category_label": "Brain & Platform",       "color": "#76B900",
+     "must_watch": ["GR00T", "Isaac Lab", "Jetson Thor"],
+     "feeds": [
+         {"url": "https://news.google.com/rss/search?q=NVIDIA+GR00T+%22Isaac+Lab%22+robot&hl=en-US&gl=US&ceid=US:en"},
+         {"url": "https://nvidianews.nvidia.com/rss"},
+     ]},
+    {"name": "Google DeepMind",   "category_label": "Brain & Platform",       "color": "#4285F4",
+     "must_watch": ["RT-2", "AutoRT", "PaLM-E"],
+     "feeds": [
+         {"url": "https://news.google.com/rss/search?q=%22Google+DeepMind%22+RT-2+robotics&hl=en-US&gl=US&ceid=US:en"},
+         {"url": "https://deepmind.google/blog/rss.xml"},
+     ]},
+    {"name": "Tesla",             "category_label": "End-to-End AI",          "color": "#CC0000",
+     "must_watch": ["Optimus", "FSD", "Dojo"],
+     "feeds": [
+         {"url": "https://news.google.com/rss/search?q=Tesla+Optimus+humanoid+robot&hl=en-US&gl=US&ceid=US:en"},
+     ]},
+    {"name": "Figure AI",         "category_label": "Hardware & Logic",       "color": "#FF6B00",
+     "must_watch": ["Figure 02", "Figure 03", "OpenAI Partnership"],
+     "feeds": [
+         {"url": "https://news.google.com/rss/search?q=%22Figure+AI%22+humanoid+robot&hl=en-US&gl=US&ceid=US:en"},
+     ]},
+    {"name": "Agility Robotics",  "category_label": "Industrial / Logistics", "color": "#00875A",
+     "must_watch": ["Digit", "Toyota Partnership", "Amazon Partnership"],
+     "feeds": [
+         {"url": "https://news.google.com/rss/search?q=%22Agility+Robotics%22+Digit+robot&hl=en-US&gl=US&ceid=US:en"},
+     ]},
+    {"name": "Amazon Robotics",   "category_label": "Infrastructure",         "color": "#FF9900",
+     "must_watch": ["Sequoia", "Proteus", "Culper"],
+     "feeds": [
+         {"url": "https://news.google.com/rss/search?q=Amazon+%22Amazon+Robotics%22+Sequoia+Proteus&hl=en-US&gl=US&ceid=US:en"},
+         {"url": "https://www.amazon.science/latest-news.rss"},
+     ]},
+    {"name": "Sanctuary AI",      "category_label": "Specialized Brain",      "color": "#7B2FBE",
+     "must_watch": ["Phoenix", "Carbon OS"],
+     "feeds": [
+         {"url": "https://news.google.com/rss/search?q=%22Sanctuary+AI%22+Phoenix+humanoid&hl=en-US&gl=US&ceid=US:en"},
+     ]},
+]
+
 # ── Scheduler ─────────────────────────────────────────────────────────────────
 SCHEDULE_DAY: str = os.getenv("SCHEDULE_DAY", "monday")
 SCHEDULE_HOUR: int = int(os.getenv("SCHEDULE_HOUR", "9"))

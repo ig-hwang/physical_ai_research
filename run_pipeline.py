@@ -50,6 +50,18 @@ def run_once() -> dict:
         result["errors"].append(f"수집: {e}")
         return result
 
+    # Step 1b: Key Player 뉴스 피드 (Claude 분석 없이 직접 DB 저장)
+    try:
+        news_records = scout.fetch_key_player_news(days_back=14)
+        if news_records:
+            from pipeline.archivist import DataArchivist as _DA
+            archivist_direct = _DA()
+            archivist_direct.run_pipeline(news_records)
+            log.info(f"뉴스 피드 직접 저장: {len(news_records)}건")
+    except Exception as e:
+        log.error(f"Step 1b 뉴스 피드 오류: {e}")
+        result["errors"].append(f"뉴스 피드: {e}")
+
     if not raw_records:
         log.warning("수집 결과 없음. 파이프라인 중단.")
         return result

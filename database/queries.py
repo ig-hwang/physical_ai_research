@@ -123,6 +123,32 @@ def get_latest_weekly_report(session: Session) -> Optional[WeeklyReport]:
     ).first()
 
 
+def get_news_feed_df(
+    session: Session,
+    company: str | None = None,
+    days_back: int = 14,
+) -> pd.DataFrame:
+    """Key Player 뉴스 피드 조회 (processing_pipeline='news_feed')."""
+    cutoff = datetime.utcnow() - timedelta(days=days_back)
+    q = session.query(MarketSignal).filter(
+        MarketSignal.processing_pipeline == "news_feed",
+        MarketSignal.published_at >= cutoff,
+    )
+    if company:
+        q = q.filter(MarketSignal.category == company)
+    rows = q.order_by(MarketSignal.published_at.desc()).limit(200).all()
+
+    return pd.DataFrame([{
+        "title": r.title,
+        "source_url": r.source_url,
+        "publisher": r.publisher,
+        "category": r.category,
+        "published_at": r.published_at,
+        "confidence_score": r.confidence_score,
+        "key_insights": r.key_insights or [],
+    } for r in rows])
+
+
 def upsert_signal(session: Session, signal_data: dict) -> tuple[bool, str]:
     """
     Idempotent upsert by event_id.
