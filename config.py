@@ -37,8 +37,10 @@ NEWS_API_KEY: str = _get_secret("NEWS_API_KEY")
 DATABASE_URL: str = _get_secret("DATABASE_URL", f"sqlite:///{BASE_DIR}/pasis.db")
 
 # ── Claude Model ──────────────────────────────────────────────────────────────
-CLAUDE_MODEL: str = "claude-sonnet-4-6"
-CLAUDE_MAX_TOKENS: int = 2048
+CLAUDE_MODEL: str = "claude-sonnet-4-6"          # 주간 리포트 전용
+CLAUDE_ANALYSIS_MODEL: str = "claude-haiku-4-5-20251001"  # 개별 신호 분석
+CLAUDE_MAX_TOKENS: int = 500                      # 신호 분석 JSON 출력 상한
+CLAUDE_REPORT_MAX_TOKENS: int = 8192             # 주간 리포트 출력 상한
 
 # ── Research Taxonomy (from CLAUDE.md) ────────────────────────────────────────
 SCOPES: list[str] = ["Market", "Tech", "Case", "Policy"]
@@ -66,7 +68,7 @@ STRATEGIC_KEYWORDS: list[str] = [
 
 # ── arXiv Config ──────────────────────────────────────────────────────────────
 ARXIV_CATEGORIES: list[str] = ["cs.RO", "cs.AI", "cs.CV", "cs.LG"]
-ARXIV_MAX_RESULTS: int = 30
+ARXIV_MAX_RESULTS: int = 15
 ARXIV_RATE_LIMIT_SEC: float = 3.0  # 1 req per 3 seconds
 
 # ── SEC EDGAR Config ──────────────────────────────────────────────────────────

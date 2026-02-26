@@ -18,7 +18,10 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type
 
-from config import ANTHROPIC_API_KEY, CLAUDE_MODEL, CLAUDE_MAX_TOKENS, PROCESSED_DIR
+from config import (
+    ANTHROPIC_API_KEY, CLAUDE_MODEL, CLAUDE_ANALYSIS_MODEL,
+    CLAUDE_MAX_TOKENS, CLAUDE_REPORT_MAX_TOKENS, PROCESSED_DIR,
+)
 
 log = logging.getLogger(__name__)
 
@@ -178,7 +181,7 @@ class StrategicAnalyzer:
             signal_json = json.dumps(
                 {
                     "title": signal.get("title", ""),
-                    "raw_content": signal.get("raw_content", "")[:1500],
+                    "raw_content": signal.get("raw_content", "")[:600],
                     "scope": signal.get("scope", ""),
                     "publisher": signal.get("source_metadata", {}).get("publisher", ""),
                     "published_at": signal.get("source_metadata", {}).get("published_at", ""),
@@ -187,7 +190,7 @@ class StrategicAnalyzer:
             )
 
             message = self._client.messages.create(
-                model=CLAUDE_MODEL,
+                model=CLAUDE_ANALYSIS_MODEL,
                 max_tokens=CLAUDE_MAX_TOKENS,
                 messages=[
                     {
@@ -302,7 +305,7 @@ class StrategicAnalyzer:
         try:
             message = self._client.messages.create(
                 model=CLAUDE_MODEL,
-                max_tokens=8192,
+                max_tokens=CLAUDE_REPORT_MAX_TOKENS,
                 messages=[
                     {
                         "role": "user",
