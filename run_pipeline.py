@@ -25,6 +25,36 @@ logging.basicConfig(
 log = logging.getLogger("run_pipeline")
 
 
+def _filter_new_signals(raw_records: list[dict]) -> list[dict]:
+    """이미 DB에 존재하는 source_url 신호를 분석 전에 제외."""
+    from database.init_db import get_session
+    from database.models import MarketSignal
+
+    urls = [r.get("source_metadata", {}).get("url", "") for r in raw_records]
+    if not urls:
+        return raw_records
+
+    try:
+        with get_session() as session:
+            existing_urls = {
+                row[0] for row in
+                session.query(MarketSignal.source_url)
+                .filter(MarketSignal.source_url.in_(urls))
+                .all()
+            }
+        new_records = [
+            r for r in raw_records
+            if r.get("source_metadata", {}).get("url", "") not in existing_urls
+        ]
+        skipped = len(raw_records) - len(new_records)
+        if skipped > 0:
+            log.info(f"기존 신호 스킵: {skipped}건 (이미 DB 존재) → 신규 분석 대상: {len(new_records)}건")
+        return new_records
+    except Exception as e:
+        log.warning(f"DB 체크 실패, 전체 분석 진행: {e}")
+        return raw_records
+
+
 def run_once() -> dict:
     """
     데이터 수집 → 분석 → DB 저장 → 주간 리포트 생성 1회 실행.
@@ -66,11 +96,12 @@ def run_once() -> dict:
         log.warning("수집 결과 없음. 파이프라인 중단.")
         return result
 
-    # Step 2: 분석
+    # Step 2: 분석 (신규 신호만)
     try:
         analyzer = StrategicAnalyzer()
-        analyzed_records = analyzer.analyze_batch(raw_records, save_processed=True)
-        log.info(f"Step 2 완료: {len(analyzed_records)}건 분석")
+        new_records = _filter_new_signals(raw_records)
+        analyzed_records = analyzer.analyze_batch(new_records, save_processed=True) if new_records else []
+        log.info(f"Step 2 완료: {len(analyzed_records)}건 분석 (전체 수집 {len(raw_records)}건 중 신규)")
     except Exception as e:
         log.error(f"Step 2 분석 오류: {e}")
         analyzed_records = raw_records  # 분석 실패 시 원본 사용
@@ -79,7 +110,7 @@ def run_once() -> dict:
     # Step 3: DB 저장
     try:
         archivist = DataArchivist()
-        ingest_result = archivist.run_pipeline(analyzed_records)
+        ingest_result = archivist.run_pipeline(analyzed_records) if analyzed_records else {"rows_inserted": 0, "rows_updated": 0, "errors": []}
         result["inserted"] = ingest_result.get("rows_inserted", 0)
         result["updated"] = ingest_result.get("rows_updated", 0)
         result["errors"].extend(ingest_result.get("errors", []))

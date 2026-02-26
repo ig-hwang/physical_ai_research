@@ -91,40 +91,33 @@ def _generate_and_save_weekly_report(analyzer: object, signals: list[dict]) -> N
 
     scope_counts = Counter(s.get("scope", "") for s in signals)
 
-    html_report = analyzer.generate_weekly_report(signals)
-
-    # Executive summary 추출 (앞 500자)
-    exec_summary = html_report[:500] if html_report else ""
-
     with get_session() as session:
-        # 동일 주 리포트가 있으면 업데이트
         existing = session.query(WeeklyReport).filter_by(iso_week=iso_week_str).first()
+
+        # 이번 주 리포트가 이미 있으면 Claude 호출 스킵
         if existing:
-            existing.full_report_html = html_report
-            existing.total_signals = len(signals)
-            existing.market_signals = scope_counts.get("Market", 0)
-            existing.tech_signals = scope_counts.get("Tech", 0)
-            existing.case_signals = scope_counts.get("Case", 0)
-            existing.policy_signals = scope_counts.get("Policy", 0)
-            existing.generated_at = now
-            log.info(f"주간 리포트 업데이트: {iso_week_str}")
-        else:
-            report = WeeklyReport(
-                week_start=week_start,
-                week_end=week_end,
-                iso_week=iso_week_str,
-                total_signals=len(signals),
-                market_signals=scope_counts.get("Market", 0),
-                tech_signals=scope_counts.get("Tech", 0),
-                case_signals=scope_counts.get("Case", 0),
-                policy_signals=scope_counts.get("Policy", 0),
-                executive_summary=exec_summary,
-                full_report_html=html_report,
-                model_used=CLAUDE_MODEL,
-                generated_at=now,
-            )
-            session.add(report)
-            log.info(f"주간 리포트 신규 생성: {iso_week_str}")
+            log.info(f"주간 리포트 이미 존재 — Claude 재생성 스킵: {iso_week_str}")
+            return
+
+        html_report = analyzer.generate_weekly_report(signals)
+        exec_summary = html_report[:500] if html_report else ""
+
+        report = WeeklyReport(
+            week_start=week_start,
+            week_end=week_end,
+            iso_week=iso_week_str,
+            total_signals=len(signals),
+            market_signals=scope_counts.get("Market", 0),
+            tech_signals=scope_counts.get("Tech", 0),
+            case_signals=scope_counts.get("Case", 0),
+            policy_signals=scope_counts.get("Policy", 0),
+            executive_summary=exec_summary,
+            full_report_html=html_report,
+            model_used=CLAUDE_MODEL,
+            generated_at=now,
+        )
+        session.add(report)
+        log.info(f"주간 리포트 신규 생성: {iso_week_str}")
 
 
 def _on_job_executed(event: object) -> None:
