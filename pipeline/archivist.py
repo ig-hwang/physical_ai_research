@@ -237,7 +237,7 @@ class DataArchivist:
                         "scraped_at": scraped_dt,
                         "confidence_score": meta.get("confidence_score"),
                         "data_quality_score": quality_score,
-                        "processing_pipeline": "scout->analysis->archivist",
+                        "processing_pipeline": record.get("processing_pipeline", "scout->analysis->archivist"),
                         "schema_version": "v1.0",
                     }
 
