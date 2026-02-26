@@ -86,15 +86,15 @@ def load_news_feed(company: Optional[str], days_back: int) -> pd.DataFrame:
             q = q.filter(MarketSignal.category == company)
         rows = q.order_by(MarketSignal.published_at.desc()).limit(200).all()
 
-    return pd.DataFrame([{
-        "title": r.title,
-        "source_url": r.source_url,
-        "publisher": r.publisher,
-        "category": r.category,
-        "published_at": r.published_at,
-        "confidence_score": r.confidence_score,
-        "key_insights": r.key_insights or [],
-    } for r in rows])
+        return pd.DataFrame([{
+            "title": r.title,
+            "source_url": r.source_url,
+            "publisher": r.publisher,
+            "category": r.category,
+            "published_at": r.published_at,
+            "confidence_score": r.confidence_score,
+            "key_insights": r.key_insights or [],
+        } for r in rows])
 
 
 # ── 사이드바 ───────────────────────────────────────────────────────────────────
