@@ -10,7 +10,7 @@ import pandas as pd
 from sqlalchemy import func, text
 from sqlalchemy.orm import Session
 
-from database.models import MarketSignal, WeeklyReport
+from database.models import MarketSignal, WeeklyReport, MonthlyReport
 
 log = logging.getLogger(__name__)
 
@@ -120,6 +120,13 @@ def get_latest_weekly_report(session: Session) -> Optional[WeeklyReport]:
     """Return most recent weekly report."""
     return session.query(WeeklyReport).order_by(
         WeeklyReport.week_start.desc()
+    ).first()
+
+
+def get_latest_monthly_report(session: Session) -> Optional[MonthlyReport]:
+    """Return most recent monthly report."""
+    return session.query(MonthlyReport).order_by(
+        MonthlyReport.month_start.desc()
     ).first()
 
 

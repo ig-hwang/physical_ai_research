@@ -130,3 +130,36 @@ class WeeklyReport(Base):
         Index("idx_week_start", "week_start"),
         Index("idx_iso_week", "iso_week"),
     )
+
+
+class MonthlyReport(Base):
+    """
+    Auto-generated monthly strategic brief (Bain style)
+    Grain: 1 record per calendar month
+    """
+    __tablename__ = "monthly_reports"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    report_id = Column(String(36), unique=True, nullable=False, default=lambda: str(uuid.uuid4()))
+    month_key = Column(String(7), unique=True, nullable=False)  # e.g. "2026-02"
+    month_start = Column(DateTime, nullable=False)
+    month_end = Column(DateTime, nullable=False)
+
+    # Counts
+    total_signals = Column(Integer, default=0)
+    market_signals = Column(Integer, default=0)
+    tech_signals = Column(Integer, default=0)
+    case_signals = Column(Integer, default=0)
+    policy_signals = Column(Integer, default=0)
+
+    # Generated content (HTML)
+    full_report_html = Column(Text, nullable=True)
+
+    # Metadata
+    generated_at = Column(DateTime, default=datetime.utcnow)
+    model_used = Column(String(50), nullable=True)
+
+    __table_args__ = (
+        Index("idx_month_start", "month_start"),
+        Index("idx_month_key", "month_key"),
+    )

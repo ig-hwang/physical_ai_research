@@ -23,6 +23,10 @@ from config import (
     CLAUDE_MAX_TOKENS, CLAUDE_REPORT_MAX_TOKENS, PROCESSED_DIR,
 )
 try:
+    from config import CLAUDE_MONTHLY_MAX_TOKENS
+except ImportError:
+    CLAUDE_MONTHLY_MAX_TOKENS = 12000
+try:
     from config import CLAUDE_ANALYSIS_MODEL
 except ImportError:
     CLAUDE_ANALYSIS_MODEL = "claude-haiku-4-5-20251001"
@@ -144,6 +148,112 @@ LGU+ 액션:
 <div class="rpt-action rpt-action--now">즉시(1개월): 구체적 액션</div>
 <div class="rpt-action rpt-action--short">단기(3개월): 준비 과제</div>
 <div class="rpt-action rpt-action--mid">중기(6~12개월): 전략 방향</div>
+
+source_url이 있는 경우 기업명·논문명에 반드시 <a href="URL" target="_blank">하이퍼링크</a> 삽입.
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"""
+
+
+_MONTHLY_REPORT_PROMPT = """당신은 LG유플러스 포트폴리오 전략팀의 Physical AI 수석 전략 파트너입니다.
+Bain & Company 스타일로 이번 달 Physical AI 시장 전체를 담은 HTML 월간 리포트를 작성하십시오.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+[최우선 준수 사항]
+▶ 6개 섹션 전부 완성 필수. 섹션 중간 잘림 절대 금지.
+▶ Bain 스타일 원칙: Situation-Complication-Resolution, 아젠다 드리븐, 결론 우선, 수치 기반.
+▶ 분량 제한 엄수 (초과 시 마지막 섹션 잘림):
+   Section 1: Executive Summary — So What 3개, 각 2문장 이내, 핵심 수치 포함
+   Section 2: Key Agendas — 이슈 3~5개, 각 Issue/Evidence/Implication 1~2문장
+   Section 3: Competitive Intelligence — 기업 4~6개, 각 Action + Win/Watch/Caution 태그
+   Section 4: Technology Radar — 기술 항목 5~7개, Early/Emerging/Mainstream 분류
+   Section 5: Capital Flow — M&A·투자·파트너십 데이터 있을 때만. 없으면 생략.
+   Section 6: Strategic Positioning — 즉시/단기/중기 각 1~2개 액션
+
+[절대 금지 사항]
+- 수집 건수, 스코프별 통계 나열 → 금지
+- "총 N건이 수집되었습니다" 형식 → 금지
+- 신호를 단순 제목 리스트로 나열 → 금지
+- 모호한 표현("검토 필요", "관심 권고") → 금지. 구체적 수치·기업명 필수.
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+[신호 데이터 — 이번 달 수집 {total}건 중 주요 신호]
+{signals_json}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+[필수 HTML 구조 — 6개 섹션, 순서와 제목 그대로]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+## SECTION 1 — 이달의 핵심 메시지 (Executive Summary)
+"이번 달 Physical AI 시장에서 C-Level이 반드시 알아야 할 것은 무엇인가?"에 직접 답하라.
+So What 3개: 각각 구체적 수치 또는 기업명 포함, 전략적 함의로 마무리.
+독자가 이 섹션만 읽어도 이번 달 시장 판도를 완전히 파악할 수 있어야 함.
+
+## SECTION 2 — 주요 아젠다 분석 (Key Agendas)
+이번 달 시장을 움직인 핵심 이슈 3~5개를 아젠다 단위로 분석.
+각 아젠다 형식:
+  → [Issue] 이슈의 핵심 한 줄
+  → [Evidence] 구체적 근거 (기업명, 수치, 날짜)
+  → [Implication] LGU+ 전략팀 관점에서의 전략적 함의
+
+## SECTION 3 — 기업 전략 동향 (Competitive Intelligence)
+주요 기업별 이달 핵심 Action을 정리. 데이터에 없는 기업은 포함 금지.
+각 기업 항목:
+  → [Action] 이달의 결정적 행동 (발표·투자·제품·파트너십)
+  → [태그] Win (시장 우위 확보) / Watch (잠재적 위협) / Caution (리스크)
+
+## SECTION 4 — 기술 성숙도 레이더 (Technology Radar)
+이번 달 신호에서 포착된 기술 동향을 성숙도별로 분류.
+각 기술 항목: 기술명 | 근거 신호 | 성숙도 [Early/Emerging/Mainstream] | 12개월 전망 1문장.
+"왜 지금 이 기술이 중요한가"에 집중. 단순 기술 설명 금지.
+
+## SECTION 5 — 투자 & 자본 흐름 (Capital Flow)
+M&A, 투자, 파트너십 데이터가 있을 경우만 작성. 없으면 섹션 전체 생략.
+"자금이 어디로 향하는가", "어떤 기업군이 강해지고 있는가" 관점으로 서술.
+투자 규모·밸류에이션·전략적 의도를 수치 기반으로 분석.
+
+## SECTION 6 — LGU+ 전략 포지셔닝 (Strategic Positioning)
+모호한 표현 금지. 담당자가 당장 실행 가능한 수준으로 구체화.
+- 즉시 (1개월 이내): 다음 달까지 당장 실행할 액션 1~2개
+- 단기 (3개월): 준비·구축·파트너십 과제 1~2개
+- 중기 (6~12개월): LGU+ 전략 포지셔닝 방향 1~2개
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+[HTML 출력 요건 — 반드시 준수]
+① <!DOCTYPE>, <html>, <head>, <body>, <style> 태그 완전 금지 — HTML 조각(fragment)만 반환
+② CSS·인라인 스타일 일절 금지 — 아래 지정 클래스만 사용
+③ 코드블록 래핑(```html ... ```) 금지 — 순수 HTML 텍스트만 출력
+
+[사용 가능 HTML 구조]
+섹션 래퍼:
+<div class="mrpt-section">
+  <div class="mrpt-section-title">섹션 제목</div>
+  <div class="mrpt-body">본문 내용 <strong>강조</strong></div>
+</div>
+
+아젠다 카드:
+<div class="mrpt-agenda">
+  <div class="mrpt-agenda-title">아젠다 제목</div>
+  <div class="mrpt-issue"><strong>Issue</strong> 이슈 내용</div>
+  <div class="mrpt-evidence"><strong>Evidence</strong> 근거 내용</div>
+  <div class="mrpt-implication"><strong>Implication</strong> 함의 내용</div>
+</div>
+
+기업 동향:
+<div class="mrpt-company">
+  <div class="mrpt-company-name"><a href="URL">기업명</a> <span class="mrpt-action-tag win">Win</span></div>
+  <div class="mrpt-body">Action 내용</div>
+</div>
+<!-- 태그 종류: win / watch / caution -->
+
+기술 레이더:
+<div class="mrpt-tech-item">
+  <span class="mrpt-badge">Emerging</span> <strong>기술명</strong> — 근거 및 전망
+</div>
+<!-- 배지 종류: Early / Emerging / Mainstream -->
+
+LGU+ 액션:
+<div class="mrpt-action mrpt-action--now">즉시(1개월): 구체적 액션</div>
+<div class="mrpt-action mrpt-action--short">단기(3개월): 준비 과제</div>
+<div class="mrpt-action mrpt-action--mid">중기(6~12개월): 전략 방향</div>
 
 source_url이 있는 경우 기업명·논문명에 반드시 <a href="URL" target="_blank">하이퍼링크</a> 삽입.
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"""
@@ -331,6 +441,80 @@ class StrategicAnalyzer:
             log.error(f"주간 리포트 생성 오류: {e}")
             return self._fallback_weekly_report(signals)
 
+    def generate_monthly_report(self, signals: list[dict]) -> str:
+        """
+        월간 전략 브리핑 HTML 리포트 생성 (Bain 스타일).
+        API 미설정 시 기본 HTML 반환.
+        """
+        if not self._available or not signals:
+            return self._fallback_monthly_report(signals)
+
+        # 신뢰도 기준 정렬 후 스코프별 상위 신호 선택 (각 7건씩, 최대 28건)
+        def _sort_key(s: dict) -> float:
+            return float(s.get("confidence_score") or s.get("data_quality_score") or 0.5)
+
+        top_signals = []
+        for scope in ["Market", "Tech", "Case", "Policy"]:
+            scope_sigs = sorted(
+                [s for s in signals if s.get("scope") == scope],
+                key=_sort_key,
+                reverse=True,
+            )
+            top_signals.extend(scope_sigs[:7])
+
+        signals_summary = json.dumps(
+            [
+                {
+                    "scope": s.get("scope"),
+                    "category": s.get("category"),
+                    "title": s.get("title", ""),
+                    "content": (
+                        s.get("summary")
+                        or s.get("raw_content", "")
+                    )[:500],
+                    "strategic_implication": s.get("strategic_implication", ""),
+                    "key_insights": s.get("key_insights", []),
+                    "publisher": (
+                        s.get("publisher")
+                        or s.get("source_metadata", {}).get("publisher", "")
+                    ),
+                    "source_url": s.get("source_url") or s.get("source_metadata", {}).get("url", ""),
+                    "published_at": str(
+                        s.get("published_at")
+                        or s.get("source_metadata", {}).get("published_at", "")
+                    )[:10],
+                    "confidence": round(_sort_key(s), 2),
+                }
+                for s in top_signals
+            ],
+            ensure_ascii=False,
+        )
+
+        try:
+            message = self._client.messages.create(
+                model=CLAUDE_MODEL,
+                max_tokens=CLAUDE_MONTHLY_MAX_TOKENS,
+                messages=[
+                    {
+                        "role": "user",
+                        "content": _MONTHLY_REPORT_PROMPT.format(
+                            total=len(signals),
+                            signals_json=signals_summary,
+                        ),
+                    }
+                ],
+            )
+            html = message.content[0].text.strip()
+            if html.startswith("```"):
+                html = html.split("```")[1]
+                if html.startswith("html"):
+                    html = html[4:]
+            return html
+
+        except Exception as e:
+            log.error(f"월간 리포트 생성 오류: {e}")
+            return self._fallback_monthly_report(signals)
+
     # ── Fallbacks ──────────────────────────────────────────────────────────
 
     def _fallback_analysis(self, signal: dict) -> dict:
@@ -356,6 +540,28 @@ class StrategicAnalyzer:
   <h2>PASIS 주간 Physical AI 인텔리전스 브리핑</h2>
   <p>생성일: {datetime.now(timezone.utc).strftime('%Y-%m-%d')}</p>
   <h3>이번 주 수집 현황</h3>
+  <ul>
+    {''.join(f'<li>{scope}: {cnt}건</li>' for scope, cnt in scope_counts.items())}
+  </ul>
+  <p>총 {len(signals)}건의 신호 수집.</p>
+  <p><em>상세 전략 분석은 ANTHROPIC_API_KEY 설정 후 자동 생성됩니다.</em></p>
+  <h3>수집 신호 목록</h3>
+  <ul>{items}</ul>
+</div>"""
+
+    def _fallback_monthly_report(self, signals: list[dict]) -> str:
+        """Claude API 미설정 시 기본 월간 리포트 HTML."""
+        from collections import Counter
+        scope_counts = Counter(s.get("scope", "Unknown") for s in signals)
+        items = "".join(
+            f"<li><strong>[{s.get('scope')}]</strong> {s.get('title', '')}</li>"
+            for s in signals[:20]
+        )
+        return f"""
+<div class="monthly-report-fallback">
+  <h2>PASIS 월간 Physical AI 인텔리전스 브리핑</h2>
+  <p>생성일: {datetime.now(timezone.utc).strftime('%Y-%m-%d')}</p>
+  <h3>이번 달 수집 현황</h3>
   <ul>
     {''.join(f'<li>{scope}: {cnt}건</li>' for scope, cnt in scope_counts.items())}
   </ul>

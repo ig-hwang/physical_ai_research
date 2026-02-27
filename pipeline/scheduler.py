@@ -133,6 +133,63 @@ def _generate_and_save_weekly_report(
         log.info(f"주간 리포트 {'재' if force else '신규 '}생성: {iso_week_str}")
 
 
+def _generate_and_save_monthly_report(
+    analyzer: object, signals: list[dict], force: bool = False
+) -> None:
+    """월간 리포트 HTML 생성 후 DB 저장 (Bain 스타일).
+
+    Args:
+        analyzer: StrategicAnalyzer 인스턴스
+        signals: 분석 대상 신호 목록 (30일치)
+        force: True이면 기존 리포트를 삭제하고 재생성
+    """
+    import calendar
+    from database.init_db import get_session
+    from database.models import MonthlyReport
+    from config import CLAUDE_MODEL
+    from collections import Counter
+
+    now = datetime.utcnow()
+    month_key = f"{now.year}-{now.month:02d}"
+
+    # 해당 월 1일 ~ 말일
+    month_start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+    last_day = calendar.monthrange(now.year, now.month)[1]
+    month_end = now.replace(day=last_day, hour=23, minute=59, second=59, microsecond=0)
+
+    scope_counts = Counter(s.get("scope", "") for s in signals)
+
+    with get_session() as session:
+        existing = session.query(MonthlyReport).filter_by(month_key=month_key).first()
+
+        if existing and not force:
+            log.info(f"월간 리포트 이미 존재 — Claude 재생성 스킵: {month_key}")
+            return
+
+        if existing and force:
+            session.delete(existing)
+            session.flush()
+            log.info(f"기존 월간 리포트 삭제 후 재생성: {month_key}")
+
+        html_report = analyzer.generate_monthly_report(signals)
+
+        report = MonthlyReport(
+            month_key=month_key,
+            month_start=month_start,
+            month_end=month_end,
+            total_signals=len(signals),
+            market_signals=scope_counts.get("Market", 0),
+            tech_signals=scope_counts.get("Tech", 0),
+            case_signals=scope_counts.get("Case", 0),
+            policy_signals=scope_counts.get("Policy", 0),
+            full_report_html=html_report,
+            model_used=CLAUDE_MODEL,
+            generated_at=now,
+        )
+        session.add(report)
+        log.info(f"월간 리포트 {'재' if force else '신규 '}생성: {month_key}")
+
+
 def _on_job_executed(event: object) -> None:
     log.info(f"[Scheduler] 잡 성공: {getattr(event, 'job_id', '')}")
 

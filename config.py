@@ -41,6 +41,7 @@ CLAUDE_MODEL: str = "claude-sonnet-4-6"          # 주간 리포트 전용
 CLAUDE_ANALYSIS_MODEL: str = "claude-haiku-4-5-20251001"  # 개별 신호 분석
 CLAUDE_MAX_TOKENS: int = 1024                     # 신호 분석 JSON 출력 상한
 CLAUDE_REPORT_MAX_TOKENS: int = 8192             # 주간 리포트 출력 상한
+CLAUDE_MONTHLY_MAX_TOKENS: int = 12000           # 월간 리포트 출력 상한
 
 # ── Research Taxonomy (from CLAUDE.md) ────────────────────────────────────────
 SCOPES: list[str] = ["Market", "Tech", "Case", "Policy"]
