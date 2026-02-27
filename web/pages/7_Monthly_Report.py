@@ -143,11 +143,13 @@ def _extract_body(html: str) -> tuple[str, str]:
 
 @st.cache_data(ttl=300)
 def load_latest_monthly_report() -> dict | None:
-    from database.init_db import get_session
+    from database.init_db import get_session, get_engine
+    from database.models import Base
     try:
         from database.models import MonthlyReport
     except ImportError:
         return None
+    Base.metadata.create_all(get_engine())  # 테이블 없으면 생성 (idempotent)
     with get_session() as session:
         report = (
             session.query(MonthlyReport)
@@ -189,9 +191,11 @@ def _generate_report() -> str:
     from datetime import datetime
     from collections import Counter
     from pipeline.analyzer import StrategicAnalyzer
-    from database.init_db import get_session
-    from database.models import MonthlyReport
+    from database.init_db import get_session, get_engine
+    from database.models import Base, MonthlyReport
     from config import CLAUDE_MODEL
+
+    Base.metadata.create_all(get_engine())  # 테이블 없으면 생성 (idempotent)
 
     signals = load_signals_for_report(days_back=31)
     if not signals:
