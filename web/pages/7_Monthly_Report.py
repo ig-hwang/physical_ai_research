@@ -185,15 +185,47 @@ def load_signals_for_report(days_back: int = 31) -> list[dict]:
 
 def _generate_report() -> str:
     """즉시 월간 리포트 생성 후 DB 저장 (기존 리포트 강제 재생성)."""
+    import calendar
+    from datetime import datetime
+    from collections import Counter
     from pipeline.analyzer import StrategicAnalyzer
-    from pipeline.scheduler import _generate_and_save_monthly_report
+    from database.init_db import get_session
+    from database.models import MonthlyReport
+    from config import CLAUDE_MODEL
 
     signals = load_signals_for_report(days_back=31)
     if not signals:
         return "데이터 없음: 먼저 파이프라인을 실행하세요."
 
     analyzer = StrategicAnalyzer()
-    _generate_and_save_monthly_report(analyzer, signals, force=True)
+    html_report = analyzer.generate_monthly_report(signals)
+
+    now = datetime.utcnow()
+    month_key = f"{now.year}-{now.month:02d}"
+    month_start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+    last_day = calendar.monthrange(now.year, now.month)[1]
+    month_end = now.replace(day=last_day, hour=23, minute=59, second=59, microsecond=0)
+    scope_counts = Counter(s.get("scope", "") for s in signals)
+
+    with get_session() as session:
+        existing = session.query(MonthlyReport).filter_by(month_key=month_key).first()
+        if existing:
+            session.delete(existing)
+            session.flush()
+        report = MonthlyReport(
+            month_key=month_key,
+            month_start=month_start,
+            month_end=month_end,
+            total_signals=len(signals),
+            market_signals=scope_counts.get("Market", 0),
+            tech_signals=scope_counts.get("Tech", 0),
+            case_signals=scope_counts.get("Case", 0),
+            policy_signals=scope_counts.get("Policy", 0),
+            full_report_html=html_report,
+            model_used=CLAUDE_MODEL,
+            generated_at=now,
+        )
+        session.add(report)
     return "생성 완료"
 
 
