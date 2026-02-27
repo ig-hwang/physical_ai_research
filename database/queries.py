@@ -10,7 +10,11 @@ import pandas as pd
 from sqlalchemy import func, text
 from sqlalchemy.orm import Session
 
-from database.models import MarketSignal, WeeklyReport, MonthlyReport
+from database.models import MarketSignal, WeeklyReport
+try:
+    from database.models import MonthlyReport
+except ImportError:
+    MonthlyReport = None  # type: ignore
 
 log = logging.getLogger(__name__)
 
@@ -123,8 +127,10 @@ def get_latest_weekly_report(session: Session) -> Optional[WeeklyReport]:
     ).first()
 
 
-def get_latest_monthly_report(session: Session) -> Optional[MonthlyReport]:
+def get_latest_monthly_report(session: Session) -> Optional[object]:
     """Return most recent monthly report."""
+    if MonthlyReport is None:
+        return None
     return session.query(MonthlyReport).order_by(
         MonthlyReport.month_start.desc()
     ).first()
