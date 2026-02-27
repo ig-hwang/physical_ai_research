@@ -144,9 +144,16 @@ def _extract_body(html: str) -> tuple[str, str]:
 @st.cache_data(ttl=300)
 def load_latest_monthly_report() -> dict | None:
     from database.init_db import get_session
-    from database.queries import get_latest_monthly_report
+    try:
+        from database.models import MonthlyReport
+    except ImportError:
+        return None
     with get_session() as session:
-        report = get_latest_monthly_report(session)
+        report = (
+            session.query(MonthlyReport)
+            .order_by(MonthlyReport.month_start.desc())
+            .first()
+        )
         if not report:
             return None
         return {
