@@ -19,9 +19,13 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type
 
 from config import (
-    ANTHROPIC_API_KEY, CLAUDE_MODEL, CLAUDE_ANALYSIS_MODEL,
+    ANTHROPIC_API_KEY, CLAUDE_MODEL,
     CLAUDE_MAX_TOKENS, CLAUDE_REPORT_MAX_TOKENS, PROCESSED_DIR,
 )
+try:
+    from config import CLAUDE_ANALYSIS_MODEL
+except ImportError:
+    CLAUDE_ANALYSIS_MODEL = "claude-haiku-4-5-20251001"
 
 log = logging.getLogger(__name__)
 
