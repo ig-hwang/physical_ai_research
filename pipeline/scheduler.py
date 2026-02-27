@@ -71,8 +71,16 @@ def run_weekly_pipeline() -> None:
     log.info(f"=== PASIS 주간 파이프라인 완료: {datetime.now().isoformat()} ===")
 
 
-def _generate_and_save_weekly_report(analyzer: object, signals: list[dict]) -> None:
-    """주간 리포트 HTML 생성 후 DB 저장."""
+def _generate_and_save_weekly_report(
+    analyzer: object, signals: list[dict], force: bool = False
+) -> None:
+    """주간 리포트 HTML 생성 후 DB 저장.
+
+    Args:
+        analyzer: StrategicAnalyzer 인스턴스
+        signals: 분석 대상 신호 목록
+        force: True이면 기존 리포트를 삭제하고 재생성
+    """
     from datetime import timedelta
     from database.init_db import get_session
     from database.models import WeeklyReport
@@ -94,10 +102,15 @@ def _generate_and_save_weekly_report(analyzer: object, signals: list[dict]) -> N
     with get_session() as session:
         existing = session.query(WeeklyReport).filter_by(iso_week=iso_week_str).first()
 
-        # 이번 주 리포트가 이미 있으면 Claude 호출 스킵
-        if existing:
+        # 이번 주 리포트가 이미 있고 강제 재생성이 아니면 스킵
+        if existing and not force:
             log.info(f"주간 리포트 이미 존재 — Claude 재생성 스킵: {iso_week_str}")
             return
+
+        if existing and force:
+            session.delete(existing)
+            session.flush()
+            log.info(f"기존 주간 리포트 삭제 후 재생성: {iso_week_str}")
 
         html_report = analyzer.generate_weekly_report(signals)
         exec_summary = html_report[:500] if html_report else ""
@@ -117,7 +130,7 @@ def _generate_and_save_weekly_report(analyzer: object, signals: list[dict]) -> N
             generated_at=now,
         )
         session.add(report)
-        log.info(f"주간 리포트 신규 생성: {iso_week_str}")
+        log.info(f"주간 리포트 {'재' if force else '신규 '}생성: {iso_week_str}")
 
 
 def _on_job_executed(event: object) -> None:

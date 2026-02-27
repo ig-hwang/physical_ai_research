@@ -171,7 +171,7 @@ def load_signals_for_report(days_back: int = 90) -> list[dict]:
 
 
 def _generate_report() -> str:
-    """즉시 주간 리포트 생성 후 DB 저장."""
+    """즉시 주간 리포트 생성 후 DB 저장 (기존 리포트 강제 재생성)."""
     from pipeline.analyzer import StrategicAnalyzer
     from pipeline.scheduler import _generate_and_save_weekly_report
 
@@ -180,7 +180,7 @@ def _generate_report() -> str:
         return "데이터 없음: 먼저 파이프라인을 실행하세요."
 
     analyzer = StrategicAnalyzer()
-    _generate_and_save_weekly_report(analyzer, signals)
+    _generate_and_save_weekly_report(analyzer, signals, force=True)
     return "생성 완료"
 
 
